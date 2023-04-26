@@ -1,16 +1,69 @@
+import { NextApiHandler } from "next";
+import { NextAuthOptions } from "next-auth";
 import NextAuth from "next-auth";
-import Auth0Provider from "next-auth/providers/auth0";
+import CredentialsProvider from "next-auth/providers/credentials";
 
-export const authOptions = {
-  // Configure one or more authentication providers
-  providers: [
-    // !!! Should be stored in .env file.
-    Auth0Provider({
-      clientId: `Be5vsLunFvpzPf4xfXtaMxrZUVBjjNPO`,
-      clientSecret: `08F9X84FvzpsimV16CQvlQuwJOlqk-GqQgEdcq_3xzrn1K3UHnTCcRgMCwBW7api`,
-      issuer: `https://dev-qg1ftdys736bk5i3.us.auth0.com`,
-    }),
-  ],
-  secret: `UItTuD1HcGXIj8ZfHUswhYdNd40Lc325R8VlxQPUoR0=`,
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null
 };
-export default NextAuth(authOptions);
+
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {
+        username: { label: "Username", type: "text", placeholder: "jsmith" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials, req) {
+        const res = await fetch("http://localhost:8000/api/auth/login/", {
+          method: 'POST',
+          body: JSON.stringify(credentials),
+          headers: { "Content-Type": "application/json" }
+        })
+        const data = await res.json()
+        if (res.ok && data?.access_token) {
+          const user: User = {
+            name: data.user.username,
+            email: data.user.email,
+            id: data.user.userId,
+            image: null
+
+          };
+          return user;
+        }
+        return null
+      }
+    })
+  ],
+  session: {
+    strategy: "jwt",
+  },
+  secret: "bMFZFfDdzpgqlcQZklCdPldjAWAiMxfNZCIHvTtfHhSLyukxLz%",
+  callbacks: {
+    async session({ session, token }) {
+        if (token?.user) {
+        session.user = token.user;
+      }
+      return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.user = user;
+      }
+      return token;
+    },
+    async signIn({ user }) {
+      return !!user;
+    },
+    async redirect({ baseUrl }) {
+      return baseUrl;
+    },
+  },
+};
+
+export default (req: any, res: any) => NextAuth(req, res, authOptions) as NextApiHandler;

@@ -3,7 +3,7 @@ import { useLogin } from "@refinedev/core";
 import { GetServerSideProps } from "next";
 
 import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]";
+import { authOptions  } from "../api/auth/[...nextauth]";
 
 export default function Login() {
   const { mutate: login } = useLogin();
@@ -21,12 +21,7 @@ export default function Login() {
       <button onClick={() => login({})}>Sign in</button>
       <p>
         Powered by
-        <img
-          style={{ padding: "0 5px" }}
-          alt="Auth0"
-          src="https://refine.ams3.cdn.digitaloceanspaces.com/superplate-auth-icons%2Fauth0-2.svg"
-        />
-        Auth0
+        Django-Rest-Auth
       </p>
     </div>
   );
